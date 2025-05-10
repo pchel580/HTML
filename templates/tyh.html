@@ -1,0 +1,79 @@
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('plot-form');
+            const loading = document.getElementById('loading');
+            const errorAlert = document.getElementById('error-alert');
+            const plotContainer = document.getElementById('plot-container');
+            const plotImage = document.getElementById('plot-image');
+
+            // Обработка примеров
+            document.querySelectorAll('.example-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById('function').value = this.textContent;
+                });
+            });
+
+            // Обработка формы
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const func = document.getElementById('function').value.trim();
+                const xMin = parseFloat(document.getElementById('x-min').value);
+                const xMax = parseFloat(document.getElementById('x-max').value);
+
+                // Валидация
+                if (xMin >= xMax) {
+                    showError('Минимальное значение x должно быть меньше максимального');
+                    return;
+                }
+
+                if (!func) {
+                    showError('Введите функцию для построения');
+                    return;
+                }
+
+                // Показать индикатор загрузки
+                loading.style.display = 'block';
+                errorAlert.style.display = 'none';
+                plotContainer.style.display = 'none';
+
+                // Отправить запрос
+                fetch('/plot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        function: func,
+                        x_min: xMin,
+                        x_max: xMax
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+
+                    if (data.error) {
+                        showError(data.error);
+                    } else {
+                        plotImage.src = `data:image/png;base64,${data.image}`;
+                        plotContainer.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    loading.style.display = 'none';
+                    showError('Произошла ошибка при построении графика');
+                    console.error('Error:', error);
+                });
+            });
+
+            function showError(message) {
+                errorAlert.textContent = message;
+                errorAlert.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

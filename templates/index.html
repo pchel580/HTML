@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Графики функций</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        #plot-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .examples {
+            margin-top: 20px;
+        }
+        .example-btn {
+            margin: 5px;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .formula-example {
+            font-family: monospace;
+            background-color: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h2 class="text-center mb-4">Построитель графиков функций</h2>
+
+                        <form id="plot-form" class="mb-4">
+                            <div class="mb-3">
+                                <label for="function" class="form-label">Функция f(x):</label>
+                                <input type="text" class="form-control" id="function"
+                                       placeholder="Введите функцию, например: sin(x)*e^(-x/5)" required>
+                                <div class="form-text">
+                                    Используйте <span class="formula-example">x</span> как переменную.
+                                    Для степени: <span class="formula-example">x^2</span>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="x-min" class="form-label">Минимальное x:</label>
+                                    <input type="number" class="form-control" id="x-min" value="-10" step="any" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="x-max" class="form-label">Максимальное x:</label>
+                                    <input type="number" class="form-control" id="x-max" value="10" step="any" required>
+                                </div>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    Построить график
+                                </button>
+                            </div>
+
+                            <div id="form-error" class="error-message mt-2"></div>
+                        </form>
+
+                        <div id="loading" class="loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Загрузка...</span>
+                            </div>
+                            <p class="mt-2">Идет построение графика...</p>
+                        </div>
+
+                        <div id="plot-container" class="text-center" style="display: none;">
+                            <img id="plot-image" src="" alt="График функции" class="img-fluid mb-2">
+                            <div id="plot-warning" class="text-muted small"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h4 class="mb-3">Примеры функций:</h4>
+                        <div class="examples">
+                            <div class="mb-3">
+                                <h5>Основные:</h5>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">x^2</button>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">sqrt(x)</button>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">abs(x)</button>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">(x-1)^3</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <h5>Тригонометрические:</h5>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">sin(x)</button>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">cos(2*x)</button>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">tan(x)</button>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">sin(x)/x</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <h5>Экспоненциальные:</h5>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">e^(-x^2)</button>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">2^x</button>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">log(x+1)</button>
+                            </div>
+
+                            <div>
+                                <h5>Сложные:</h5>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">x*sin(1/x)</button>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">sin(x^2)*e^(-x/5)</button>
+                                <button class="example-btn btn btn-outline-secondary btn-sm">(x^2 - 1)/(x - 1)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('plot-form');
+            const loading = document.getElementById('loading');
+            const plotContainer = document.getElementById('plot-container');
+            const plotImage = document.getElementById('plot-image');
+            const plotWarning = document.getElementById('plot-warning');
+            const formError = document.getElementById('form-error');
+            const functionInput = document.getElementById('function');
+
+            // Обработка примеров
+            document.querySelectorAll('.example-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    functionInput.value = this.textContent;
+                    functionInput.focus();
+                });
+            });
+
+            // Обработка формы
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const func = functionInput.value.trim();
+                const xMin = parseFloat(document.getElementById('x-min').value);
+                const xMax = parseFloat(document.getElementById('x-max').value);
+
+                // Валидация
+                formError.textContent = '';
+                if (xMin >= xMax) {
+                    formError.textContent = 'Минимальное значение x должно быть меньше максимального';
+                    return;
+                }
+
+                if (!func) {
+                    formError.textContent = 'Введите функцию для построения';
+                    return;
+                }
+
+                // Показать индикатор загрузки
+                loading.style.display = 'block';
+                plotContainer.style.display = 'none';
+                plotWarning.textContent = '';
+
+                try {
+                    const response = await fetch('/plot', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            function: func,
+                            x_min: xMin,
+                            x_max: xMax
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Ошибка сервера');
+                    }
+
+                    plotImage.src = `data:image/png;base64,${data.image}`;
+                    plotContainer.style.display = 'block';
+
+                } catch (error) {
+                    formError.textContent = error.message;
+                } finally {
+                    loading.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
