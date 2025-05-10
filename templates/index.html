@@ -163,7 +163,10 @@
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
-                const func = functionInput.value.trim();
+                 let func = functionInput.value.trim();
+                // Заменяем ^ на ** только в математическом контексте
+                func = func.replace(/([\w\)])\s*\^\s*([\w\(])/g, '$1**$2');
+
                 const xMin = parseFloat(document.getElementById('x-min').value);
                 const xMax = parseFloat(document.getElementById('x-max').value);
 

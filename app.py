@@ -87,14 +87,16 @@ class FunctionEvaluator:
 
     def _replace_power_operator(self, expr: str) -> str:
         """Заменяет ^ на ** для корректного вычисления"""
-        # Заменяем только если ^ не в строковых литералах
-        return re.sub(r'(?<!\w)\^(?!\w)', '**', expr)
+        pattern = r'([\)\w])\s*\^\s*([\(\[\w])'
+        return re.sub(pattern, r'\1**\2', expr)
 
     def _compile(self, expr: str):
         """Компилирует выражение с проверкой безопасности"""
         if not re.fullmatch(r'^[\w\s\.\+\-\*/\(\)\^\,\=\>\<\!&|\~\:\%]+$', expr):
             raise ValueError("Выражение содержит недопустимые символы")
 
+        # Заменяем ^ на ** перед компиляцией
+        expr = self._replace_power_operator(expr)
         code = compile(expr, '<string>', 'eval')
         for name in code.co_names:
             if name not in self.ALLOWED_NAMES:
