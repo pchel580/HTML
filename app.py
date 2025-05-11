@@ -160,12 +160,34 @@ def generate_plot_image(func: str, x_min: float, x_max: float) -> Tuple[Optional
         ax.set_ylabel('f(x)', labelpad=10)
         ax.grid(True, alpha=0.3)
 
-        # Автоматическое масштабирование
+        # Добавляем оси координат (x=0 и y=0)
+        ax.axhline(0, color='black', linewidth=0.5)
+        ax.axvline(0, color='black', linewidth=0.5)
+
+        # Автоматическое масштабирование для отображения всех 4 четвертей
         y_valid = y[np.isfinite(y)]
         if len(y_valid) > 0:
-            y_min, y_max = np.nanpercentile(y_valid, [5, 95])
-            margin = max((y_max - y_min) * 0.1, 0.1)
+            # Находим минимальное и максимальное значение y
+            y_min, y_max = np.nanmin(y_valid), np.nanmax(y_valid)
+
+            # Если все значения положительные, показываем и отрицательную область
+            if y_min > 0:
+                y_min = -0.1 * y_max
+            # Если все значения отрицательные, показываем и положительную область
+            elif y_max < 0:
+                y_max = -0.1 * y_min
+
+            # Добавляем небольшой отступ
+            y_range = y_max - y_min
+            margin = max(y_range * 0.1, 0.1)
             ax.set_ylim(y_min - margin, y_max + margin)
+
+        # Также убедимся, что ось X показывает отрицательные и положительные значения
+        if x_min > 0:
+            x_min = -0.1 * x_max
+        elif x_max < 0:
+            x_max = -0.1 * x_min
+        ax.set_xlim(x_min, x_max)
 
         # Сохранение в буфер
         buf = io.BytesIO()
