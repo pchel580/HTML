@@ -24,24 +24,41 @@ MAX_TIME_SECONDS = 3
 class FunctionEvaluator:
     """Безопасный вычислитель математических функций"""
 
-    ALLOWED_NAMES = {
-        **{k: v for k, v in math.__dict__.items() if not k.startswith('_')},
-        'abs': abs,
-        'min': min,
-        'max': max,
-        'pow': pow,
-        'round': round,
-        'log': math.log,
-        'log10': math.log10,
-        'sqrt': math.sqrt,
-        'sin': math.sin,
-        'cos': math.cos,
-        'tan': math.tan,
-        'exp': math.exp,
-        'pi': math.pi,
-        'e': math.e,
-        'x': None
-    }
+    class FunctionEvaluator:
+        """Безопасный вычислитель математических функций"""
+
+        ALLOWED_NAMES = {
+            **{k: v for k, v in math.__dict__.items() if not k.startswith('_')},
+            'abs': abs,
+            'min': min,
+            'max': max,
+            'pow': pow,
+            'round': round,
+            'log': math.log,
+            'log10': math.log10,
+            'sqrt': math.sqrt,
+            'sin': math.sin,
+            'cos': math.cos,
+            'tan': math.tan,
+            'exp': math.exp,
+            'pi': math.pi,
+            'e': math.e,
+            'x': None,
+            'y': None
+        }
+
+    def _evaluate_single(self, compiled_code, x: float) -> float:
+        """Вычисляет значение функции для одного x"""
+        try:
+            return float(eval(
+                compiled_code,
+                {'__builtins__': None},
+                {'x': x, 'y': x, **{k: v for k, v in self.ALLOWED_NAMES.items() if v is not None}}
+            ))
+        except (ValueError, ZeroDivisionError) as e:
+            raise ValueError(f"Функция не определена при x={x}")
+        except Exception as e:
+            raise ValueError(str(e))
 
     def __init__(self):
         self._last_error = None
@@ -128,7 +145,6 @@ def generate_plot_image(func: str, x_min: float, x_max: float) -> Tuple[Optional
         if not evaluator.validate(func):
             raise ValueError(evaluator.last_error)
 
-        # Автоматический подбор количества точек
         range_width = x_max - x_min
         num_points = min(MAX_POINTS, max(500, int(range_width * 50)))
         x = np.linspace(x_min, x_max, num_points)
@@ -140,21 +156,17 @@ def generate_plot_image(func: str, x_min: float, x_max: float) -> Tuple[Optional
         # Создание графика
         fig, ax = plt.subplots(figsize=(10, 6), dpi=100)
 
-        # Разделяем график на непрерывные участки
         mask = np.isfinite(y)
         if np.any(~mask):
-            # Находим границы разрывов
             discontinuities = np.where(~mask)[0]
             segments = np.split(np.arange(len(x)), discontinuities)
 
-            # Рисуем каждый непрерывный участок
             for seg in segments:
-                if len(seg) > 1:  # Игнорируем одиночные точки
+                if len(seg) > 1:
                     ax.plot(x[seg], y[seg], 'b-', linewidth=2)
         else:
             ax.plot(x, y, 'b-', linewidth=2)
 
-        # Настройки графика
         ax.set_title(f'График функции: {func}', pad=20)
         ax.set_xlabel('x', labelpad=10)
         ax.set_ylabel('f(x)', labelpad=10)
@@ -164,32 +176,27 @@ def generate_plot_image(func: str, x_min: float, x_max: float) -> Tuple[Optional
         ax.axhline(0, color='black', linewidth=0.5)
         ax.axvline(0, color='black', linewidth=0.5)
 
-        # Автоматическое масштабирование для отображения всех 4 четвертей
         y_valid = y[np.isfinite(y)]
         if len(y_valid) > 0:
-            # Находим минимальное и максимальное значение y
+
             y_min, y_max = np.nanmin(y_valid), np.nanmax(y_valid)
 
-            # Если все значения положительные, показываем и отрицательную область
             if y_min > 0:
                 y_min = -0.1 * y_max
-            # Если все значения отрицательные, показываем и положительную область
+
             elif y_max < 0:
                 y_max = -0.1 * y_min
 
-            # Добавляем небольшой отступ
             y_range = y_max - y_min
             margin = max(y_range * 0.1, 0.1)
             ax.set_ylim(y_min - margin, y_max + margin)
 
-        # Также убедимся, что ось X показывает отрицательные и положительные значения
         if x_min > 0:
             x_min = -0.1 * x_max
         elif x_max < 0:
             x_max = -0.1 * x_min
         ax.set_xlim(x_min, x_max)
 
-        # Сохранение в буфер
         buf = io.BytesIO()
         plt.savefig(buf, format='png', bbox_inches='tight', dpi=100)
         plt.close(fig)
