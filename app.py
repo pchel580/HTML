@@ -24,115 +24,120 @@ MAX_TIME_SECONDS = 3
 class FunctionEvaluator:
     """Безопасный вычислитель математических функций"""
 
-    class FunctionEvaluator:
-        """Безопасный вычислитель математических функций"""
+    ALLOWED_NAMES = {
+        **{k: v for k, v in math.__dict__.items() if not k.startswith('_')},
+        'abs': abs,
+        'min': min,
+        'max': max,
+        'pow': pow,
+        'round': round,
+        'log': math.log,
+        'log10': math.log10,
+        'sqrt': math.sqrt,
+        'sin': math.sin,
+        'cos': math.cos,
+        'tan': math.tan,
+        'exp': math.exp,
+        'pi': math.pi,
+        'e': math.e,
+        'x': None,
+        'y': None
+    }
 
-        ALLOWED_NAMES = {
-            **{k: v for k, v in math.__dict__.items() if not k.startswith('_')},
-            'abs': abs,
-            'min': min,
-            'max': max,
-            'pow': pow,
-            'round': round,
-            'log': math.log,
-            'log10': math.log10,
-            'sqrt': math.sqrt,
-            'sin': math.sin,
-            'cos': math.cos,
-            'tan': math.tan,
-            'exp': math.exp,
-            'pi': math.pi,
-            'e': math.e,
-            'x': None,
-            'y': None
-        }
 
-    def _evaluate_single(self, compiled_code, x: float) -> float:
-        """Вычисляет значение функции для одного x"""
-        try:
-            return float(eval(
-                compiled_code,
-                {'__builtins__': None},
-                {'x': x, 'y': x, **{k: v for k, v in self.ALLOWED_NAMES.items() if v is not None}}
-            ))
-        except (ValueError, ZeroDivisionError) as e:
-            raise ValueError(f"Функция не определена при x={x}")
-        except Exception as e:
-            raise ValueError(str(e))
+def _evaluate_single(self, compiled_code, x: float) -> float:
+    """Вычисляет значение функции для одного x"""
+    try:
+        return float(eval(
+            compiled_code,
+            {'__builtins__': None},
+            {'x': x, 'y': x, **{k: v for k, v in self.ALLOWED_NAMES.items() if v is not None}}
+        ))
+    except (ValueError, ZeroDivisionError) as e:
+        raise ValueError(f"Функция не определена при x={x}")
+    except Exception as e:
+        raise ValueError(str(e))
 
-    def __init__(self):
-        self._last_error = None
 
-    @property
-    def last_error(self) -> Optional[str]:
-        return self._last_error
+def __init__(self):
+    self._last_error = None
 
-    def validate(self, expr: str) -> bool:
-        """Проверяет валидность математического выражения"""
-        try:
-            expr = self._replace_power_operator(expr)
-            self._compile(expr)
-            return True
-        except (SyntaxError, ValueError, TypeError) as e:
-            self._last_error = str(e)
-            return False
 
-    def evaluate(self, expr: str, x_values: np.ndarray) -> Optional[np.ndarray]:
-        """Вычисляет значения функции для массива x"""
-        try:
-            expr = self._replace_power_operator(expr)
-            compiled = self._compile(expr)
-            start_time = time.time()
+@property
+def last_error(self) -> Optional[str]:
+    return self._last_error
 
-            result = np.zeros_like(x_values, dtype=float)
-            for i, x in enumerate(x_values):
-                try:
-                    result[i] = self._evaluate_single(compiled, x)
-                except (ValueError, ZeroDivisionError):
-                    result[i] = np.nan
-                except Exception as e:
-                    self._last_error = f"Ошибка при x={x}: {str(e)}"
-                    return None
 
-            if time.time() - start_time > MAX_TIME_SECONDS:
-                raise TimeoutError("Вычисление заняло слишком много времени")
-
-            return result
-        except Exception as e:
-            self._last_error = str(e)
-            return None
-
-    def _replace_power_operator(self, expr: str) -> str:
-        """Заменяет ^ на ** для корректного вычисления"""
-        pattern = r'([\)\w])\s*\^\s*([\(\[\w])'
-        return re.sub(pattern, r'\1**\2', expr)
-
-    def _compile(self, expr: str):
-        """Компилирует выражение с проверкой безопасности"""
-        if not re.fullmatch(r'^[\w\s\.\+\-\*/\(\)\^\,\=\>\<\!&|\~\:\%]+$', expr):
-            raise ValueError("Выражение содержит недопустимые символы")
-
-        # Заменяем ^ на ** перед компиляцией
+def validate(self, expr: str) -> bool:
+    """Проверяет валидность математического выражения"""
+    try:
         expr = self._replace_power_operator(expr)
-        code = compile(expr, '<string>', 'eval')
-        for name in code.co_names:
-            if name not in self.ALLOWED_NAMES:
-                raise ValueError(f"Использование '{name}' не разрешено")
+        self._compile(expr)
+        return True
+    except (SyntaxError, ValueError, TypeError) as e:
+        self._last_error = str(e)
+        return False
 
-        return code
 
-    def _evaluate_single(self, compiled_code, x: float) -> float:
-        """Вычисляет значение функции для одного x"""
-        try:
-            return float(eval(
-                compiled_code,
-                {'__builtins__': None},
-                {'x': x, **{k: v for k, v in self.ALLOWED_NAMES.items() if v is not None}}
-            ))
-        except (ValueError, ZeroDivisionError) as e:
-            raise ValueError(f"Функция не определена при x={x}")
-        except Exception as e:
-            raise ValueError(str(e))
+def evaluate(self, expr: str, x_values: np.ndarray) -> Optional[np.ndarray]:
+    """Вычисляет значения функции для массива x"""
+    try:
+        expr = self._replace_power_operator(expr)
+        compiled = self._compile(expr)
+        start_time = time.time()
+
+        result = np.zeros_like(x_values, dtype=float)
+        for i, x in enumerate(x_values):
+            try:
+                result[i] = self._evaluate_single(compiled, x)
+            except (ValueError, ZeroDivisionError):
+                result[i] = np.nan
+            except Exception as e:
+                self._last_error = f"Ошибка при x={x}: {str(e)}"
+                return None
+
+        if time.time() - start_time > MAX_TIME_SECONDS:
+            raise TimeoutError("Вычисление заняло слишком много времени")
+
+        return result
+    except Exception as e:
+        self._last_error = str(e)
+        return None
+
+
+def _replace_power_operator(self, expr: str) -> str:
+    """Заменяет ^ на ** для корректного вычисления"""
+    pattern = r'([\)\w])\s*\^\s*([\(\[\w])'
+    return re.sub(pattern, r'\1**\2', expr)
+
+
+def _compile(self, expr: str):
+    """Компилирует выражение с проверкой безопасности"""
+    if not re.fullmatch(r'^[\w\s\.\+\-\*/\(\)\^\,\=\>\<\!&|\~\:\%]+$', expr):
+        raise ValueError("Выражение содержит недопустимые символы")
+
+    # Заменяем ^ на ** перед компиляцией
+    expr = self._replace_power_operator(expr)
+    code = compile(expr, '<string>', 'eval')
+    for name in code.co_names:
+        if name not in self.ALLOWED_NAMES:
+            raise ValueError(f"Использование '{name}' не разрешено")
+
+    return code
+
+
+def _evaluate_single(self, compiled_code, x: float) -> float:
+    """Вычисляет значение функции для одного x"""
+    try:
+        return float(eval(
+            compiled_code,
+            {'__builtins__': None},
+            {'x': x, **{k: v for k, v in self.ALLOWED_NAMES.items() if v is not None}}
+        ))
+    except (ValueError, ZeroDivisionError) as e:
+        raise ValueError(f"Функция не определена при x={x}")
+    except Exception as e:
+        raise ValueError(str(e))
 
 
 def generate_plot_image(func: str, x_min: float, x_max: float) -> Tuple[Optional[str], Optional[str]]:
