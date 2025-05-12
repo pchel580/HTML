@@ -8,7 +8,7 @@ import io
 import base64
 import re
 import math
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, Any
 import time
 import logging
 import os
@@ -16,13 +16,13 @@ import os
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
-# Конфигурация
 MAX_POINTS = 10_000
 MAX_TIME_SECONDS = 3
+DEFAULT_VARIABLES = {'x'}
 
 
 class FunctionEvaluator:
-    """Безопасный вычислитель математических функций"""
+    """Безопасный вычислитель математических функций с поддержкой произвольных переменных"""
 
     ALLOWED_NAMES = {
         **{k: v for k, v in math.__dict__.items() if not k.startswith('_')},
@@ -40,167 +40,148 @@ class FunctionEvaluator:
         'exp': math.exp,
         'pi': math.pi,
         'e': math.e,
-        'x': None,
-        'y': None
     }
 
+    def __init__(self):
+        self._last_error = None
 
-def _evaluate_single(self, compiled_code, x: float) -> float:
-    """Вычисляет значение функции для одного x"""
-    try:
-        return float(eval(
-            compiled_code,
-            {'__builtins__': None},
-            {'x': x, 'y': x, **{k: v for k, v in self.ALLOWED_NAMES.items() if v is not None}}
-        ))
-    except (ValueError, ZeroDivisionError) as e:
-        raise ValueError(f"Функция не определена при x={x}")
-    except Exception as e:
-        raise ValueError(str(e))
+    @property
+    def last_error(self) -> Optional[str]:
+        return self._last_error
 
+    def validate(self, expr: str) -> Tuple[bool, set]:
+        """Проверяет валидность выражения и возвращает набор переменных"""
+        try:
+            expr = self._replace_power_operator(expr)
+            code = self._compile(expr)
+            variables = self._extract_variables(code)
+            return True, variables
+        except (SyntaxError, ValueError, TypeError) as e:
+            self._last_error = str(e)
+            return False, set()
 
-def __init__(self):
-    self._last_error = None
+    def evaluate(self, expr: str, var_values: Dict[str, np.ndarray]) -> Optional[np.ndarray]:
+        """Вычисляет значения функции для массива значений переменных"""
+        try:
+            expr = self._replace_power_operator(expr)
+            compiled = self._compile(expr)
+            start_time = time.time()
 
+            lengths = {len(v) for v in var_values.values()}
+            if len(lengths) != 1:
+                raise ValueError("Все переменные должны иметь одинаковое количество значений")
 
-@property
-def last_error(self) -> Optional[str]:
-    return self._last_error
+            result = np.zeros_like(next(iter(var_values.values())), dtype=float)
+            for i in range(len(result)):
+                try:
+                    context = {k: v[i] for k, v in var_values.items()}
+                    context.update({k: v for k, v in self.ALLOWED_NAMES.items()})
 
+                    result[i] = float(eval(compiled, {'__builtins__': None}, context))
+                except (ValueError, ZeroDivisionError):
+                    result[i] = np.nan
+                except Exception as e:
+                    self._last_error = f"Ошибка в точке {i}: {str(e)}"
+                    return None
 
-def validate(self, expr: str) -> bool:
-    """Проверяет валидность математического выражения"""
-    try:
+            if time.time() - start_time > MAX_TIME_SECONDS:
+                raise TimeoutError("Вычисление заняло слишком много времени")
+
+            return result
+        except Exception as e:
+            self._last_error = str(e)
+            return None
+
+    def _replace_power_operator(self, expr: str) -> str:
+        return re.sub(r'(?<=\w|\\)\^(?=\w|\(|\d)', '**', expr)
+
+    def _compile(self, expr: str):
         expr = self._replace_power_operator(expr)
-        self._compile(expr)
-        return True
-    except (SyntaxError, ValueError, TypeError) as e:
-        self._last_error = str(e)
-        return False
+        if not re.fullmatch(r'^[\w\s\.\+\-\*/\(\)\^\,\=\>\<\!&|\~\:\%]+$', expr):
+            raise ValueError("Выражение содержит недопустимые символы")
+
+        code = compile(expr, '<string>', 'eval')
+        # for name in code.co_names:
+        #     if name not in self.ALLOWED_NAMES:
+        #         raise ValueError(f"Использование '{name}' не разрешено")
+        return code
+
+    def _extract_variables(self, code) -> set:
+        """Извлекает имена переменных из скомпилированного кода"""
+        variables = set()
+        for name in code.co_names:
+            if name not in self.ALLOWED_NAMES and name.isidentifier():
+                variables.add(name)
+        return variables
 
 
-def evaluate(self, expr: str, x_values: np.ndarray) -> Optional[np.ndarray]:
-    """Вычисляет значения функции для массива x"""
+def generate_plot_image(func: str, var_ranges: Dict[str, Tuple[float, float]]) -> Tuple[Optional[str], Optional[str]]:
+    """Генерирует изображение графика для функции с несколькими переменными"""
     try:
-        expr = self._replace_power_operator(expr)
-        compiled = self._compile(expr)
-        start_time = time.time()
-
-        result = np.zeros_like(x_values, dtype=float)
-        for i, x in enumerate(x_values):
-            try:
-                result[i] = self._evaluate_single(compiled, x)
-            except (ValueError, ZeroDivisionError):
-                result[i] = np.nan
-            except Exception as e:
-                self._last_error = f"Ошибка при x={x}: {str(e)}"
-                return None
-
-        if time.time() - start_time > MAX_TIME_SECONDS:
-            raise TimeoutError("Вычисление заняло слишком много времени")
-
-        return result
-    except Exception as e:
-        self._last_error = str(e)
-        return None
-
-
-def _replace_power_operator(self, expr: str) -> str:
-    """Заменяет ^ на ** для корректного вычисления"""
-    pattern = r'([\)\w])\s*\^\s*([\(\[\w])'
-    return re.sub(pattern, r'\1**\2', expr)
-
-
-def _compile(self, expr: str):
-    """Компилирует выражение с проверкой безопасности"""
-    if not re.fullmatch(r'^[\w\s\.\+\-\*/\(\)\^\,\=\>\<\!&|\~\:\%]+$', expr):
-        raise ValueError("Выражение содержит недопустимые символы")
-
-    # Заменяем ^ на ** перед компиляцией
-    expr = self._replace_power_operator(expr)
-    code = compile(expr, '<string>', 'eval')
-    for name in code.co_names:
-        if name not in self.ALLOWED_NAMES:
-            raise ValueError(f"Использование '{name}' не разрешено")
-
-    return code
-
-
-def _evaluate_single(self, compiled_code, x: float) -> float:
-    """Вычисляет значение функции для одного x"""
-    try:
-        return float(eval(
-            compiled_code,
-            {'__builtins__': None},
-            {'x': x, **{k: v for k, v in self.ALLOWED_NAMES.items() if v is not None}}
-        ))
-    except (ValueError, ZeroDivisionError) as e:
-        raise ValueError(f"Функция не определена при x={x}")
-    except Exception as e:
-        raise ValueError(str(e))
-
-
-def generate_plot_image(func: str, x_min: float, x_max: float) -> Tuple[Optional[str], Optional[str]]:
-    """Генерирует изображение графика"""
-    try:
-        if x_min >= x_max:
-            raise ValueError("Минимальное значение x должно быть меньше максимального")
+        if not var_ranges:
+            raise ValueError("Не указаны диапазоны для переменных")
 
         evaluator = FunctionEvaluator()
-        if not evaluator.validate(func):
+        is_valid, variables = evaluator.validate(func)
+        if not is_valid:
             raise ValueError(evaluator.last_error)
 
+        missing_vars = variables - set(var_ranges.keys())
+        if missing_vars:
+            raise ValueError(f"Не указаны диапазоны для переменных: {', '.join(missing_vars)}")
+
+        main_var = next((v for v in DEFAULT_VARIABLES if v in variables), next(iter(variables), None))
+        if not main_var:
+            raise ValueError("Не удалось определить основную переменную для построения графика")
+
+        x_min, x_max = var_ranges[main_var]
         range_width = x_max - x_min
         num_points = min(MAX_POINTS, max(500, int(range_width * 50)))
-        x = np.linspace(x_min, x_max, num_points)
 
-        y = evaluator.evaluate(func, x)
+        var_values = {}
+        for var, (v_min, v_max) in var_ranges.items():
+            if var == main_var:
+                var_values[var] = np.linspace(v_min, v_max, num_points)
+            else:
+
+                var_values[var] = np.full(num_points, (v_min + v_max) / 2)
+
+        y = evaluator.evaluate(func, var_values)
         if y is None:
             raise ValueError(evaluator.last_error)
 
-        # Создание графика
         fig, ax = plt.subplots(figsize=(10, 6), dpi=100)
 
         mask = np.isfinite(y)
         if np.any(~mask):
             discontinuities = np.where(~mask)[0]
-            segments = np.split(np.arange(len(x)), discontinuities)
+            segments = np.split(np.arange(len(var_values[main_var])), discontinuities)
 
             for seg in segments:
                 if len(seg) > 1:
-                    ax.plot(x[seg], y[seg], 'b-', linewidth=2)
+                    ax.plot(var_values[main_var][seg], y[seg], 'b-', linewidth=2)
         else:
-            ax.plot(x, y, 'b-', linewidth=2)
+            ax.plot(var_values[main_var], y, 'b-', linewidth=2)
 
-        ax.set_title(f'График функции: {func}', pad=20)
-        ax.set_xlabel('x', labelpad=10)
-        ax.set_ylabel('f(x)', labelpad=10)
+        title_vars = ', '.join(f"{var}∈[{vmin}, {vmax}]" for var, (vmin, vmax) in var_ranges.items())
+        ax.set_title(f'График функции: {func}\n({title_vars})', pad=20)
+        ax.set_xlabel(main_var, labelpad=10)
+        ax.set_ylabel('f(' + ', '.join(var_ranges.keys()) + ')', labelpad=10)
         ax.grid(True, alpha=0.3)
 
-        # Добавляем оси координат (x=0 и y=0)
+        # Добавляем оси координат
         ax.axhline(0, color='black', linewidth=0.5)
         ax.axvline(0, color='black', linewidth=0.5)
 
         y_valid = y[np.isfinite(y)]
         if len(y_valid) > 0:
-
             y_min, y_max = np.nanmin(y_valid), np.nanmax(y_valid)
-
             if y_min > 0:
                 y_min = -0.1 * y_max
-
             elif y_max < 0:
                 y_max = -0.1 * y_min
-
-            y_range = y_max - y_min
-            margin = max(y_range * 0.1, 0.1)
+            margin = max((y_max - y_min) * 0.1, 0.1)
             ax.set_ylim(y_min - margin, y_max + margin)
-
-        if x_min > 0:
-            x_min = -0.1 * x_max
-        elif x_max < 0:
-            x_max = -0.1 * x_min
-        ax.set_xlim(x_min, x_max)
 
         buf = io.BytesIO()
         plt.savefig(buf, format='png', bbox_inches='tight', dpi=100)
@@ -224,16 +205,20 @@ def plot_function():
         return jsonify({'error': 'Неверный формат данных'}), 400
 
     func = data.get('function', '').strip()
-    try:
-        x_min = float(data.get('x_min', -10))
-        x_max = float(data.get('x_max', 10))
-    except ValueError:
-        return jsonify({'error': 'Неверный диапазон значений x'}), 400
+    var_ranges = data.get('var_ranges', {})
 
     if not func:
         return jsonify({'error': 'Функция не указана'}), 400
 
-    image_data, error = generate_plot_image(func, x_min, x_max)
+    try:
+
+        processed_ranges = {}
+        for var, (vmin, vmax) in var_ranges.items():
+            processed_ranges[var] = (float(vmin), float(vmax))
+    except (ValueError, TypeError) as e:
+        return jsonify({'error': 'Неверный формат диапазонов переменных'}), 400
+
+    image_data, error = generate_plot_image(func, processed_ranges)
     if error:
         return jsonify({'error': error}), 400
 

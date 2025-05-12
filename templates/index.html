@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Графики функций онлайн бесплатно </title>
+    <title>Графики функций с несколькими переменными</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -27,22 +27,21 @@
             text-align: center;
             margin: 20px 0;
         }
-        .examples {
-            margin-top: 20px;
-        }
-        .example-btn {
-            margin: 5px;
-        }
-        .error-message {
-            color: #dc3545;
-            font-size: 0.9em;
-            margin-top: 5px;
+        .variable-range {
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
         }
         .formula-example {
             font-family: monospace;
             background-color: #f1f1f1;
             padding: 2px 5px;
             border-radius: 3px;
+        }
+        .remove-variable {
+            cursor: pointer;
+            color: #dc3545;
         }
     </style>
 </head>
@@ -52,29 +51,42 @@
             <div class="col-lg-10">
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
-                        <h2 class="text-center mb-4">Построитель графиков функций</h2>
+                        <h2 class="text-center mb-4">График функции с несколькими переменными</h2>
 
                         <form id="plot-form" class="mb-4">
                             <div class="mb-3">
-                                <label for="function" class="form-label">Функция f(x):</label>
+                                <label for="function" class="form-label">Функция:</label>
                                 <input type="text" class="form-control" id="function"
-                                       placeholder="Введите функцию, например: sin(x)*e^(-x/5)" required>
+                                       placeholder="Введите функцию, например: x^2 + y^2" required>
                                 <div class="form-text">
-                                    Используйте <span class="formula-example">x</span> как переменную.
-                                    Для степени: <span class="formula-example">x^2</span>
+                                    Используйте любые переменные (например: <span class="formula-example">x</span>,
+                                    <span class="formula-example">y</span>, <span class="formula-example">t</span>).
+                                    Для степени: <span class="formula-example">x^2</span> или <span class="formula-example">pow(x,2)</span>
                                 </div>
                             </div>
 
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label for="x-min" class="form-label">Минимальное x:</label>
-                                    <input type="number" class="form-control" id="x-min" value="-10" step="any" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="x-max" class="form-label">Максимальное x:</label>
-                                    <input type="number" class="form-control" id="x-max" value="10" step="any" required>
+                            <div id="variables-container">
+                                <div class="variable-range mb-3">
+                                    <div class="row g-3 align-items-center">
+                                        <div class="col-md-4">
+                                            <input type="text" class="form-control variable-name" placeholder="Имя переменной" value="x" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control variable-min" placeholder="Минимум" value="-10" step="any" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control variable-max" placeholder="Максимум" value="10" step="any" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="remove-variable">✕ Удалить</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+
+                            <button type="button" id="add-variable" class="btn btn-outline-secondary btn-sm mb-3">
+                                + Добавить переменную
+                            </button>
 
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">
@@ -82,7 +94,7 @@
                                 </button>
                             </div>
 
-                            <div id="form-error" class="error-message mt-2"></div>
+                            <div id="form-error" class="text-danger mt-2"></div>
                         </form>
 
                         <div id="loading" class="loading">
@@ -94,44 +106,18 @@
 
                         <div id="plot-container" class="text-center" style="display: none;">
                             <img id="plot-image" src="" alt="График функции" class="img-fluid mb-2">
-                            <div id="plot-warning" class="text-muted small"></div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <h4 class="mb-3">Примеры функций:</h4>
-                        <div class="examples">
-                            <div class="mb-3">
-                                <h5>Основные:</h5>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">x^2</button>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">sqrt(x)</button>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">abs(x)</button>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">(x-1)^3</button>
-                            </div>
-
-                            <div class="mb-3">
-                                <h5>Тригонометрические:</h5>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">sin(x)</button>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">cos(2*x)</button>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">tan(x)</button>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">sin(x)/x</button>
-                            </div>
-
-                            <div class="mb-3">
-                                <h5>Экспоненциальные:</h5>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">e^(-x^2)</button>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">2^x</button>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">log(x+1)</button>
-                            </div>
-
-                            <div>
-                                <h5>Сложные:</h5>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">x*sin(1/x)</button>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">sin(x^2)*e^(-x/5)</button>
-                                <button class="example-btn btn btn-outline-secondary btn-sm">(x^2 - 1)/(x - 1)</button>
-                            </div>
+                        <h4>Примеры функций:</h4>
+                        <div class="mb-3">
+                            <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="x^2 + y^2">x² + y²</button>
+                            <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="sin(x) + cos(y)">sin(x) + cos(y)</button>
+                            <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="exp(-(x^2 + y^2))">exp(-(x²+y²))</button>
+                            <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="x*y/(x^2 + y^2)">xy/(x²+y²)</button>
                         </div>
                     </div>
                 </div>
@@ -143,38 +129,89 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('plot-form');
+            const variablesContainer = document.getElementById('variables-container');
+            const addVariableBtn = document.getElementById('add-variable');
             const loading = document.getElementById('loading');
             const plotContainer = document.getElementById('plot-container');
             const plotImage = document.getElementById('plot-image');
-            const plotWarning = document.getElementById('plot-warning');
             const formError = document.getElementById('form-error');
             const functionInput = document.getElementById('function');
 
-            // Обработка примеров
+            function addVariable(name = '', min = -10, max = 10) {
+                const newVar = document.createElement('div');
+                newVar.className = 'variable-range mb-3';
+                newVar.innerHTML = `
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control variable-name" placeholder="Имя переменной" value="${name}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control variable-min" placeholder="Минимум" value="${min}" step="any" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control variable-max" placeholder="Максимум" value="${max}" step="any" required>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="remove-variable">✕ Удалить</span>
+                        </div>
+                    </div>
+                `;
+                variablesContainer.appendChild(newVar);
+                newVar.querySelector('.remove-variable').addEventListener('click', () => {
+                    if (variablesContainer.children.length > 1) {
+                        newVar.remove();
+                    } else {
+                        alert('Должна остаться хотя бы одна переменная');
+                    }
+                });
+            }
+
+            addVariableBtn.addEventListener('click', () => addVariable());
+
             document.querySelectorAll('.example-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    functionInput.value = this.textContent;
+                btn.addEventListener('click', function() {
+                    const expr = this.getAttribute('data-expr');
+                    functionInput.value = expr;
+
+                    variablesContainer.innerHTML = '';
+                    if (expr.includes('x')) addVariable('x', -10, 10);
+                    if (expr.includes('y')) addVariable('y', -10, 10);
+                    if (expr.includes('t')) addVariable('t', 0, 10);
+
                     functionInput.focus();
                 });
             });
 
-            // Обработка формы
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
-                 let func = functionInput.value.trim();
-                // Заменяем ^ на ** только в математическом контексте
-                func = func.replace(/([\w\)])\s*\^\s*([\w\(])/g, '$1**$2');
+                let func = functionInput.value.trim();
+                func = func.replace(/\^/g, '**');
 
-                const xMin = parseFloat(document.getElementById('x-min').value);
-                const xMax = parseFloat(document.getElementById('x-max').value);
+                const varRanges = {};
+                const varElements = variablesContainer.querySelectorAll('.variable-range');
 
-                // Валидация
-                formError.textContent = '';
-                if (xMin >= xMax) {
-                    formError.textContent = 'Минимальное значение x должно быть меньше максимального';
-                    return;
+                for (const el of varElements) {
+                    const name = el.querySelector('.variable-name').value.trim();
+                    const vmin = el.querySelector('.variable-min').value;
+                    const vmax = el.querySelector('.variable-max').value;
+
+                    if (!name) {
+                        formError.textContent = 'Укажите имя для всех переменных';
+                        return;
+                    }
+
+                    if (!vmin || !vmax) {
+                        formError.textContent = 'Укажите диапазон для всех переменных';
+                        return;
+                    }
+
+                    if (parseFloat(vmin) >= parseFloat(vmax)) {
+                        formError.textContent = `Минимум должен быть меньше максимума для переменной ${name}`;
+                        return;
+                    }
+
+                    varRanges[name] = [vmin, vmax];
                 }
 
                 if (!func) {
@@ -182,10 +219,14 @@
                     return;
                 }
 
-                // Показать индикатор загрузки
+                if (Object.keys(varRanges).length === 0) {
+                    formError.textContent = 'Добавьте хотя бы одну переменную';
+                    return;
+                }
+
                 loading.style.display = 'block';
                 plotContainer.style.display = 'none';
-                plotWarning.textContent = '';
+                formError.textContent = '';
 
                 try {
                     const response = await fetch('/plot', {
@@ -195,8 +236,7 @@
                         },
                         body: JSON.stringify({
                             function: func,
-                            x_min: xMin,
-                            x_max: xMax
+                            var_ranges: varRanges
                         }),
                     });
 
@@ -208,7 +248,6 @@
 
                     plotImage.src = `data:image/png;base64,${data.image}`;
                     plotContainer.style.display = 'block';
-
                 } catch (error) {
                     formError.textContent = error.message;
                 } finally {
