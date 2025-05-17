@@ -83,351 +83,379 @@
     </style>
 </head>
 <body>
-    <div class="container py-4">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h2 class="text-center mb-4">График функции с несколькими переменными</h2>
-                        <form id="plot-form" class="mb-4">
-                            <div class="mb-3">
-                                <label for="function" class="form-label">Функция:</label>
-                                <input type="text" class="form-control" id="function" placeholder="Введите функцию, например: x^2 + y^2" required>
-                                <div class="form-text">
-                                    Используйте любые переменные (например: <span class="formula-example">x</span>, <span class="formula-example">y</span>, <span class="formula-example">t</span>). Для степени: <span class="formula-example">x^2</span> или <span class="formula-example">pow(x,2)</span>
-                                </div>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="text-center mb-4">График функции с несколькими переменными</h2>
+                    <form id="plot-form" class="mb-4">
+                        <div class="mb-3">
+                            <label for="function" class="form-label">Функция:</label>
+                            <input type="text" class="form-control" id="function"
+                                   placeholder="Введите функцию, например: x^2 + y^2" required>
+                            <div class="form-text">
+                                Используйте любые переменные (например: <span class="formula-example">x</span>, <span
+                                    class="formula-example">y</span>, <span class="formula-example">t</span>). Для
+                                степени: <span class="formula-example">x^2</span> или <span class="formula-example">pow(x,2)</span>
                             </div>
-                            <div id="variables-container">
-                                <div class="variable-range mb-3">
-                                    <div class="row g-3 align-items-center">
-                                        <div class="col-md-4">
-                                            <input type="text" class="form-control variable-name" placeholder="Имя переменной" value="x" required>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <input type="number" class="form-control variable-min" placeholder="Минимум" value="-10" step="any" required>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <input type="number" class="form-control variable-max" placeholder="Максимум" value="10" step="any" required>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <span class="remove-variable">✕ Удалить</span>
-                                        </div>
+                        </div>
+                        <div id="variables-container">
+                            <div class="variable-range mb-3">
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-4">
+                                        <input type="text" class="form-control variable-name"
+                                               placeholder="Имя переменной" value="x" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="number" class="form-control variable-min" placeholder="Минимум"
+                                               value="-10" step="any" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="number" class="form-control variable-max" placeholder="Максимум"
+                                               value="10" step="any" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="remove-variable">✕ Удалить</span>
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" id="add-variable" class="btn btn-outline-secondary btn-sm mb-3">+ Добавить переменную</button>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg">Построить график</button>
-                            </div>
-                            <div id="form-error" class="text-danger mt-2"></div>
-                        </form>
-                        <div id="loading" class="loading">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Загрузка...</span>
-                            </div>
-                            <p class="mt-2">Идет построение графика...</p>
                         </div>
-                        <div id="plot-container" class="text-center" style="display: none;">
-                            <img id="plot-image" src="" alt="График функции" class="img-fluid mb-2">
+                        <button type="button" id="add-variable" class="btn btn-outline-secondary btn-sm mb-3">+ Добавить
+                            переменную
+                        </button>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Построить график</button>
                         </div>
+                        <div id="form-error" class="text-danger mt-2"></div>
+                    </form>
+                    <div id="loading" class="loading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Загрузка...</span>
+                        </div>
+                        <p class="mt-2">Идет построение графика...</p>
+                    </div>
+                    <div id="plot-container" class="text-center" style="display: none;">
+                        <img id="plot-image" src="" alt="График функции" class="img-fluid mb-2">
                     </div>
                 </div>
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h4>Примеры функций:</h4>
-                        <div class="mb-3">
-                            <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="x^2 + y^2">x² + y²</button>
-                            <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="sin(x) + cos(y)">sin(x) + cos(y)</button>
-                            <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="exp(-(x^2 + y^2))">exp(-(x²+y²))</button>
-                            <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="x*y/(x^2 + y^2)">xy/(x²+y²)</button>
-                        </div>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4>Примеры функций:</h4>
+                    <div class="mb-3">
+                        <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="x^2 + y^2">x² + y²
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="sin(x) + cos(y)">sin(x)
+                            + cos(y)
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="exp(-(x^2 + y^2))">
+                            exp(-(x²+y²))
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="x*y/(x^2 + y^2)">
+                            xy/(x²+y²)
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm example-btn" data-expr="sqrt(abs(x))">
+                            sqrt(abs(x))
+                        </button>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div id="dino-game">
-        <div id="dino-game-header">
-            Динозаврик
-            <div class="game-controls">
-                <button class="game-btn" id="dino-restart">↻</button>
-                <button class="game-btn" id="dino-close">✕</button>
-            </div>
+</div>
+<div id="dino-game">
+    <div id="dino-game-header">
+        Динозаврик
+        <div class="game-controls">
+            <button class="game-btn" id="dino-restart">↻</button>
+            <button class="game-btn" id="dino-close">✕</button>
         </div>
-        <canvas id="dino-canvas"></canvas>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('plot-form');
-            const variablesContainer = document.getElementById('variables-container');
-            const addVariableBtn = document.getElementById('add-variable');
-            const loading = document.getElementById('loading');
-            const plotContainer = document.getElementById('plot-container');
-            const plotImage = document.getElementById('plot-image');
-            const formError = document.getElementById('form-error');
-            const functionInput = document.getElementById('function');
+    <canvas id="dino-canvas"></canvas>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('plot-form');
+        const variablesContainer = document.getElementById('variables-container');
+        const addVariableBtn = document.getElementById('add-variable');
+        const loading = document.getElementById('loading');
+        const plotContainer = document.getElementById('plot-container');
+        const plotImage = document.getElementById('plot-image');
+        const formError = document.getElementById('form-error');
+        const functionInput = document.getElementById('function');
 
-            function addVariable(name = '', min = -10, max = 10) {
-                const newVar = document.createElement('div');
-                newVar.className = 'variable-range mb-3';
-                newVar.innerHTML = `
-                    <div class="row g-3 align-items-center">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control variable-name" placeholder="Имя переменной" value="${name}" required>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" class="form-control variable-min" placeholder="Минимум" value="${min}" step="any" required>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" class="form-control variable-max" placeholder="Максимум" value="${max}" step="any" required>
-                        </div>
-                        <div class="col-md-2">
-                            <span class="remove-variable">✕ Удалить</span>
-                        </div>
+        function addVariable(name = '', min = -10, max = 10) {
+            const newVar = document.createElement('div');
+            newVar.className = 'variable-range mb-3';
+            newVar.innerHTML = `
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control variable-name" placeholder="Имя переменной" value="${name}" required>
                     </div>
-                `;
-                variablesContainer.appendChild(newVar);
-                newVar.querySelector('.remove-variable').addEventListener('click', () => {
-                    if (variablesContainer.children.length > 1) {
-                        newVar.remove();
-                    } else {
-                        alert('Должна остаться хотя бы одна переменная');
+                    <div class="col-md-3">
+                        <input type="number" class="form-control variable-min" placeholder="Минимум" value="${min}" step="any" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" class="form-control variable-max" placeholder="Максимум" value="${max}" step="any" required>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="remove-variable">✕ Удалить</span>
+                    </div>
+                </div>
+            `;
+            variablesContainer.appendChild(newVar);
+            newVar.querySelector('.remove-variable').addEventListener('click', () => {
+                if (variablesContainer.children.length > 1) {
+                    newVar.remove();
+                } else {
+                    alert('Должна остаться хотя бы одна переменная');
+                }
+            });
+        }
+
+        addVariableBtn.addEventListener('click', () => addVariable());
+
+        document.querySelectorAll('.example-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const expr = this.getAttribute('data-expr');
+                functionInput.value = expr;
+                variablesContainer.innerHTML = '';
+                const vars = expr.match(/[a-zA-Z]+/g) || [];
+                const uniqueVars = [...new Set(vars)]; // Убираем дубликаты
+
+
+                variablesContainer.innerHTML = '';
+
+
+                uniqueVars.forEach(v => {
+                    if (v.length === 1) {
+                        const range = v === 't' ? [0, 10] : [-10, 10];
+                        addVariable(v, range[0], range[1]);
                     }
                 });
-            }
-
-            addVariableBtn.addEventListener('click', () => addVariable());
-
-            document.querySelectorAll('.example-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const expr = this.getAttribute('data-expr');
-                    functionInput.value = expr;
-                    variablesContainer.innerHTML = '';
-                    if (expr.includes('x')) addVariable('x', -10, 10);
-                    if (expr.includes('y')) addVariable('y', -10, 10);
-                    if (expr.includes('t')) addVariable('t', 0, 10);
-                    functionInput.focus();
-                });
-            });
-
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                let func = functionInput.value.trim();
-                func = func.replace(/\^/g, '**');
-                const varRanges = {};
-                const varElements = variablesContainer.querySelectorAll('.variable-range');
-
-                for (const el of varElements) {
-                    const name = el.querySelector('.variable-name').value.trim();
-                    const vmin = el.querySelector('.variable-min').value;
-                    const vmax = el.querySelector('.variable-max').value;
-
-                    if (!name) {
-                        formError.textContent = 'Укажите имя для всех переменных';
-                        return;
-                    }
-                    if (!vmin || !vmax) {
-                        formError.textContent = 'Укажите диапазон для всех переменных';
-                        return;
-                    }
-                    if (parseFloat(vmin) >= parseFloat(vmax)) {
-                        formError.textContent = `Минимум должен быть меньше максимума для переменной ${name}`;
-                        return;
-                    }
-                    varRanges[name] = [vmin, vmax];
-                }
-
-                if (!func) {
-                    formError.textContent = 'Введите функцию для построения';
-                    return;
-                }
-                if (Object.keys(varRanges).length === 0) {
-                    formError.textContent = 'Добавьте хотя бы одну переменную';
-                    return;
-                }
-
-                loading.style.display = 'block';
-                plotContainer.style.display = 'none';
-                formError.textContent = '';
-
-                try {
-                    const response = await fetch('/plot', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({function: func, var_ranges: varRanges}),
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'Ошибка сервера');
-                    plotImage.src = `data:image/png;base64,${data.image}`;
-                    plotContainer.style.display = 'block';
-                } catch (error) {
-                    formError.textContent = error.message;
-                } finally {
-                    loading.style.display = 'none';
-                }
-            });
-
-            const dinoGame = document.getElementById('dino-game');
-            const dinoCanvas = document.getElementById('dino-canvas');
-            const dinoRestart = document.getElementById('dino-restart');
-            const dinoClose = document.getElementById('dino-close');
-            const ctx = dinoCanvas.getContext('2d');
-            dinoCanvas.width = 200;
-            dinoCanvas.height = 80;
-
-            let dinoX = 30;
-            let dinoY = 50;
-            let dinoJump = false;
-            let dinoJumpHeight = 0;
-            let gravity = 1.5;
-            let obstacles = [];
-            let score = 0;
-            let gameSpeed = 3;
-            let gameOver = false;
-            let gameStarted = false;
-            let jumpForce = 8;
-
-            function drawDino() {
-                ctx.fillStyle = '#333';
-                ctx.fillRect(dinoX, dinoY - dinoJumpHeight, 15, 20);
-                ctx.fillRect(dinoX + 15, dinoY - 5 - dinoJumpHeight, 15, 25);
-                ctx.beginPath();
-                ctx.arc(dinoX + 7, dinoY + 15 - dinoJumpHeight, 3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(dinoX + 22, dinoY + 15 - dinoJumpHeight, 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            function createObstacle() {
-                if (Math.random() < 0.015 && obstacles.length < 2) {
-                    obstacles.push({
-                        x: dinoCanvas.width,
-                        width: 8 + Math.random() * 15,
-                        height: 8 + Math.random() * 20
-                    });
-                }
-            }
-
-            function drawObstacles() {
-                ctx.fillStyle = '#333';
-                obstacles.forEach(obstacle => {
-                    ctx.fillRect(obstacle.x, dinoY + 20 - obstacle.height, obstacle.width, obstacle.height);
-                });
-            }
-
-            function updateGame() {
-                if (gameOver) return;
-                ctx.clearRect(0, 0, dinoCanvas.width, dinoCanvas.height);
-
-                if (dinoJump) {
-                    dinoJumpHeight += jumpForce;
-                    if (dinoJumpHeight > 70) {
-                        dinoJump = false;
-                    }
-                } else if (dinoJumpHeight > 0) {
-                    dinoJumpHeight -= gravity;
-                }
-
-                createObstacle();
-                obstacles = obstacles.filter(obstacle => {
-                    obstacle.x -= gameSpeed;
-                    return obstacle.x > -obstacle.width;
-                });
-
-                obstacles.forEach(obstacle => {
-                    if (dinoX + 30 > obstacle.x && dinoX < obstacle.x + obstacle.width && dinoY + 20 - dinoJumpHeight > dinoY + 20 - obstacle.height) {
-                        gameOver = true;
-                    }
-                });
-
-                if (!gameOver) {
-                    score++;
-                    if (score % 1000 === 0) {
-                        gameSpeed += 0.3;
-                    }
-                }
-
-                drawDino();
-                drawObstacles();
-                ctx.fillStyle = '#333';
-                ctx.font = '12px Arial';
-                ctx.fillText(`Счет: ${score}`, 5, 15);
-
-                if (gameOver) {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                    ctx.fillRect(0, 0, dinoCanvas.width, dinoCanvas.height);
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '14px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('Конец игры!', dinoCanvas.width / 2, dinoCanvas.height / 2);
-                    ctx.fillText(`Счет: ${score}`, dinoCanvas.width / 2, dinoCanvas.height / 2 + 20);
-                    ctx.textAlign = 'left';
-                }
-                requestAnimationFrame(updateGame);
-            }
-
-            document.addEventListener('keydown', (e) => {
-                if ((e.code === 'Space' || e.key === 'ArrowUp') && !dinoJump && !gameOver) {
-                    if (!gameStarted) {
-                        gameStarted = true;
-                        updateGame();
-                    }
-                    dinoJump = true;
-                }
-            });
-
-            dinoCanvas.addEventListener('click', () => {
-                if (!dinoJump && !gameOver) {
-                    if (!gameStarted) {
-                        gameStarted = true;
-                        updateGame();
-                    }
-                    dinoJump = true;
-                }
-            });
-
-            dinoRestart.addEventListener('click', () => {
-                obstacles = [];
-                score = 0;
-                gameSpeed = 3;
-                gameOver = false;
-                dinoJump = false;
-                dinoJumpHeight = 0;
-                gameStarted = true;
-                updateGame();
-            });
-
-            dinoClose.addEventListener('click', () => {
-                dinoGame.style.display = 'none';
-            });
-
-            let isDragging = false;
-            let offsetX, offsetY;
-            const dinoGameHeader = document.getElementById('dino-game-header');
-
-            dinoGameHeader.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                offsetX = e.clientX - dinoGame.getBoundingClientRect().left;
-                offsetY = e.clientY - dinoGame.getBoundingClientRect().top;
-                dinoGame.style.cursor = 'grabbing';
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (isDragging) {
-                    dinoGame.style.left = `${e.clientX - offsetX}px`;
-                    dinoGame.style.top = `${e.clientY - offsetY}px`;
-                    dinoGame.style.right = 'auto';
-                    dinoGame.style.bottom = 'auto';
-                }
-            });
-
-            document.addEventListener('mouseup', () => {
-                isDragging = false;
-                dinoGame.style.cursor = 'default';
             });
         });
-    </script>
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            let func = functionInput.value.trim();
+            func = func.replace(/\^/g, '**');
+            const varRanges = {};
+            const varElements = variablesContainer.querySelectorAll('.variable-range');
+
+            for (const el of varElements) {
+                const name = el.querySelector('.variable-name').value.trim();
+                const vmin = el.querySelector('.variable-min').value;
+                const vmax = el.querySelector('.variable-max').value;
+
+                if (!name) {
+                    formError.textContent = 'Укажите имя для всех переменных';
+                    return;
+                }
+                if (!vmin || !vmax) {
+                    formError.textContent = 'Укажите диапазон для всех переменных';
+                    return;
+                }
+                if (parseFloat(vmin) >= parseFloat(vmax)) {
+                    formError.textContent = `Минимум должен быть меньше максимума для переменной ${name}`;
+                    return;
+                }
+                varRanges[name] = [vmin, vmax];
+            }
+
+            if (!func) {
+                formError.textContent = 'Введите функцию для построения';
+                return;
+            }
+            if (Object.keys(varRanges).length === 0) {
+                formError.textContent = 'Добавьте хотя бы одну переменную';
+                return;
+            }
+
+            loading.style.display = 'block';
+            plotContainer.style.display = 'none';
+            formError.textContent = '';
+
+            try {
+                const response = await fetch('/plot', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({function: func, var_ranges: varRanges}),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Ошибка сервера');
+                plotImage.src = `data:image/png;base64,${data.image}`;
+                plotContainer.style.display = 'block';
+            } catch (error) {
+                formError.textContent = error.message;
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        const dinoGame = document.getElementById('dino-game');
+        const dinoCanvas = document.getElementById('dino-canvas');
+        const dinoRestart = document.getElementById('dino-restart');
+        const dinoClose = document.getElementById('dino-close');
+        const ctx = dinoCanvas.getContext('2d');
+        dinoCanvas.width = 200;
+        dinoCanvas.height = 80;
+
+        let dinoX = 30;
+        let dinoY = 50;
+        let dinoJump = false;
+        let dinoJumpHeight = 0;
+        let gravity = 1.5;
+        let obstacles = [];
+        let score = 0;
+        let gameSpeed = 3;
+        let gameOver = false;
+        let gameStarted = false;
+        let jumpForce = 8;
+
+        function drawDino() {
+            ctx.fillStyle = '#333';
+            ctx.fillRect(dinoX, dinoY - dinoJumpHeight, 15, 20);
+            ctx.fillRect(dinoX + 15, dinoY - 5 - dinoJumpHeight, 15, 25);
+            ctx.beginPath();
+            ctx.arc(dinoX + 7, dinoY + 15 - dinoJumpHeight, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(dinoX + 22, dinoY + 15 - dinoJumpHeight, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function createObstacle() {
+            if (Math.random() < 0.015 && obstacles.length < 2) {
+                obstacles.push({
+                    x: dinoCanvas.width,
+                    width: 8 + Math.random() * 15,
+                    height: 8 + Math.random() * 20
+                });
+            }
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = '#333';
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, dinoY + 20 - obstacle.height, obstacle.width, obstacle.height);
+            });
+        }
+
+        function updateGame() {
+            if (gameOver) return;
+            ctx.clearRect(0, 0, dinoCanvas.width, dinoCanvas.height);
+
+            if (dinoJump) {
+                dinoJumpHeight += jumpForce;
+                if (dinoJumpHeight > 70) {
+                    dinoJump = false;
+                }
+            } else if (dinoJumpHeight > 0) {
+                dinoJumpHeight -= gravity;
+            }
+
+            createObstacle();
+            obstacles = obstacles.filter(obstacle => {
+                obstacle.x -= gameSpeed;
+                return obstacle.x > -obstacle.width;
+            });
+
+            obstacles.forEach(obstacle => {
+                if (dinoX + 30 > obstacle.x && dinoX < obstacle.x + obstacle.width && dinoY + 20 - dinoJumpHeight > dinoY + 20 - obstacle.height) {
+                    gameOver = true;
+                }
+            });
+
+            if (!gameOver) {
+                score++;
+                if (score % 1000 === 0) {
+                    gameSpeed += 0.3;
+                }
+            }
+
+            drawDino();
+            drawObstacles();
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText(`Счет: ${score}`, 5, 15);
+
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, dinoCanvas.width, dinoCanvas.height);
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Конец игры!', dinoCanvas.width / 2, dinoCanvas.height / 2);
+                ctx.fillText(`Счет: ${score}`, dinoCanvas.width / 2, dinoCanvas.height / 2 + 20);
+                ctx.textAlign = 'left';
+            }
+            requestAnimationFrame(updateGame);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.code === 'Space' || e.key === 'ArrowUp') && !dinoJump && !gameOver) {
+                if (!gameStarted) {
+                    gameStarted = true;
+                    updateGame();
+                }
+                dinoJump = true;
+            }
+        });
+
+        dinoCanvas.addEventListener('click', () => {
+            if (!dinoJump && !gameOver) {
+                if (!gameStarted) {
+                    gameStarted = true;
+                    updateGame();
+                }
+                dinoJump = true;
+            }
+        });
+
+        dinoRestart.addEventListener('click', () => {
+            obstacles = [];
+            score = 0;
+            gameSpeed = 3;
+            gameOver = false;
+            dinoJump = false;
+            dinoJumpHeight = 0;
+            gameStarted = true;
+            updateGame();
+        });
+
+        dinoClose.addEventListener('click', () => {
+            dinoGame.style.display = 'none';
+        });
+
+        let isDragging = false;
+        let offsetX, offsetY;
+        const dinoGameHeader = document.getElementById('dino-game-header');
+
+        dinoGameHeader.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offsetX = e.clientX - dinoGame.getBoundingClientRect().left;
+            offsetY = e.clientY - dinoGame.getBoundingClientRect().top;
+            dinoGame.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                dinoGame.style.left = `${e.clientX - offsetX}px`;
+                dinoGame.style.top = `${e.clientY - offsetY}px`;
+                dinoGame.style.right = 'auto';
+                dinoGame.style.bottom = 'auto';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            dinoGame.style.cursor = 'default';
+        });
+    });
+</script>
 </body>
 </html>
