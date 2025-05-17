@@ -36,5 +36,4 @@ exe = EXE(
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,  # Измените на True, если нужна консоль для дебага
-    icon='icon.ico'  # (Опционально) Иконка для .exe
 )

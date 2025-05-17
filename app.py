@@ -16,7 +16,7 @@ import os
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
-MAX_POINTS = 10_000_000
+MAX_POINTS = 10000
 MAX_TIME_SECONDS = 3
 DEFAULT_VARIABLES = {'x'}
 
@@ -38,8 +38,6 @@ class FunctionEvaluator:
         'cos': math.cos,
         'tan': math.tan,
         'exp': math.exp,
-        'pi': math.pi,
-        'e': math.e,
     }
 
     def __init__(self):
